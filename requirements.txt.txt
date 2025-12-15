@@ -4,3 +4,4 @@ adiohttp
 json
 asyncio
 os
+Fask
