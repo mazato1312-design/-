@@ -5,6 +5,8 @@ import json
 import asyncio
 import discord.py aiohttp
 import os
+from myserver import server_on
+
 # ตั้งค่าบอท
 intents = discord.Intents.default()
 intents.message_content = True
@@ -115,5 +117,7 @@ async def topup(ctx, gift_link: str):
 async def check_stock_loop():
     # โค้ดสำหรับเช็ค API ว่ามีอะไรเปลี่ยนแปลงไหม แล้วแจ้งเตือน
     pass
+server_on()
 
-bot.run('YOUR_DISCORD_BOT_TOKEN')
+
+    bot.run(os.getenv('TOKEN'))
