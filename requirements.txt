@@ -1,8 +1,6 @@
 discord.py
 requests
 aiohttp
-asyncio
-os
-Fask
+
 
 
