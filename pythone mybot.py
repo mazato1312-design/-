@@ -5,7 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 import aiohttp
 import datetime
-
+from discord.ui import Button, View, Modal, InputText
 # --- การตั้งค่าเบื้องต้น ---
 API_URL = 'https://your-website.com/api' # URL เว็บของคุณ
 API_KEY = 'YOUR_SECRET_API_KEY' # คีย์สำหรับความปลอดภัย
@@ -142,10 +142,88 @@ async def start(interaction: discord.Interaction):
     embed.set_image(url="https://via.placeholder.com/600x200?text=Shop+Banner") # ใส่รูปแบนเนอร์ร้าน
     await interaction.response.send_message(embed=embed, view=MainMenuView())
 
+intents = discord.Intents.default()
+intents.message_content = True
+bot = commands.Bot(command_prefix='!', intents=intents)
+
+# --- ส่วนจำลอง Database (ในใช้งานจริงควรเชื่อมต่อ MongoDB หรือ SQL) ---
+shop_data = {
+    "payment_number": "ยังไม่ระบุ",
+    "products": {}  # รูปแบบ: {'Netflix': {'price': 100, 'stock': []}}
+}
+
+# --- Modal: หน้าต่างกรอกข้อมูล ---
+
+# 1. หน้าต่างตั้งค่าเบอร์รับเงิน
+class PaymentModal(Modal):
+    def __init__(self):
+        super().__init__(title="ตั้งค่าเบอร์รับเงิน")
+        self.add_item(InputText(label="เบอร์วอลเล็ท / เลขบัญชี", placeholder="081xxxxxxx"))
+
+    async def callback(self, interaction: discord.Interaction):
+        shop_data["payment_number"] = self.children[0].value
+        await interaction.response.send_message(f"✅ บันทึกเบอร์รับเงินเรียบร้อย: {shop_data['payment_number']}", ephemeral=True)
+
+# 2. หน้าต่างเพิ่มสินค้า
+class AddProductModal(Modal):
+    def __init__(self):
+        super().__init__(title="เพิ่มสินค้าใหม่")
+        self.add_item(InputText(label="ชื่อสินค้า (เช่น YouTube, Netflix)", placeholder="Netflix 4K"))
+        self.add_item(InputText(label="ราคา (บาท)", placeholder="120"))
+
+    async def callback(self, interaction: discord.Interaction):
+        name = self.children[0].value
+        price = self.children[1].value
+        
+        if name in shop_data["products"]:
+            await interaction.response.send_message("❌ มีสินค้านี้อยู่แล้ว", ephemeral=True)
+        else:
+            shop_data["products"][name] = {"price": int(price), "stock": []}
+            await interaction.response.send_message(f"✅ เพิ่มสินค้า **{name}** ราคา **{price}** บาท เรียบร้อย", ephemeral=True)
+
+# 3. หน้าต่างเติมสต็อก
+class AddStockModal(Modal):
+    def __init__(self):
+        super().__init__(title="เติมสต็อกสินค้า")
+        self.add_item(InputText(label="ชื่อสินค้าที่ต้องการเติม", placeholder="Netflix 4K"))
+        self.add_item(InputText(label="ข้อมูลสินค้า (Email:Pass หรือ Code)", style=discord.InputTextStyle.paragraph))
+
+    async def callback(self, interaction: discord.Interaction):
+        name = self.children[0].value
+        content = self.children[1].value.splitlines() # รองรับการเติมหลายบรรทัด
+        
+        if name in shop_data["products"]:
+            shop_data["products"][name]["stock"].extend(content)
+            count = len(content)
+            await interaction.response.send_message(f"✅ เติมสต็อก **{name}** จำนวน {count} ชิ้น เรียบร้อย", ephemeral=True)
+        else:
+            await interaction.response.send_message(f"❌ ไม่พบสินค้าชื่อ **{name}** กรุณาเพิ่มสินค้าก่อน", ephemeral=True)
+
+# 4. หน้าต่างลบสินค้า
+class DeleteProductModal(Modal):
+    def __init__(self):
+        super().__init__(title="ลบสินค้า")
+        self.add_item(InputText(label="ชื่อสินค้าที่ต้องการลบ", placeholder="Netflix 4K"))
+
+    async def callback(self, interaction: discord.Interaction):
+        name = self.children[0].value
+        if name in shop_data["products"]:
+            del shop_data["products"][name]
+            await interaction.response.send_message(f"🗑️ ลบสินค้า **{name}** เรียบร้อยแล้ว", ephemeral=True)
+        else:
+            await interaction.response.send_message(f"❌ ไม่พบสินค้าชื่อ **{name}**", ephemeral=True)
+
+# --- View: ตัวจัดการปุ่ม ---
+class AdminPanel(View):
+    def __init__(self):
+        super().__init__(timeout=None) # ปุ่มไม่มีวันหมดอายุ
+
+    @discord.ui.button(label="ตั้งค่าเบอร์รับเงิน", style=
 # รันบอท
 server_on()
 
 
     bot.run(os.getenv('TOKEN'))
+
 
 
