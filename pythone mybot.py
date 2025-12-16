@@ -15,8 +15,8 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 # --- CONFIGURATION ---
 API_URL = "https://your-website.com/api" # ลิงก์ API เว็บไซต์ของคุณ
 API_KEY = "SECRET_KEY_HERE" # คีย์ความปลอดภัยเพื่อยืนยันว่าเป็นบอทจริงๆ
-ADMIN_CHANNEL_ID = 1448340407942647828 # ห้องสำหรับแจ้งเตือนแอดมิน
-LOG_CHANNEL_ID = 1448339573938720808 # ห้องสำหรับแจ้งเตือนการซื้อ/เติมเงิน
+ADMIN_CHANNEL_ID = 1449323389297758252 # ห้องสำหรับแจ้งเตือนแอดมิน
+LOG_CHANNEL_ID = 1450446339854041119 # ห้องสำหรับแจ้งเตือนการซื้อ/เติมเงิน
 
 # --- API HELPER FUNCTION ---
 async def call_api(endpoint, data=None, method="GET"):
@@ -121,4 +121,5 @@ server_on()
 
 
     bot.run(os.getenv('TOKEN'))
+
 
